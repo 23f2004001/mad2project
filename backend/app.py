@@ -35,6 +35,9 @@ if __name__ == "__main__":
             db.session.commit()
             print("Admin user created!")
             # vinshi
+            # JAIN
+        
     app.run(debug=True)
+
 
 
