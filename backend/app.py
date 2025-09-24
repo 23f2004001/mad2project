@@ -34,6 +34,7 @@ if __name__ == "__main__":
             db.session.add(admin)
             db.session.commit()
             print("Admin user created!")
+            # vinshi
     app.run(debug=True)
 
 
