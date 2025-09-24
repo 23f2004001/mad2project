@@ -1,47 +1,39 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_cors import CORS
-from flask_mail import Mail
+from application.config import LocalDevelopmentConfig
+from application.database import db
+from application.model import User
+from application.security import jwt
 
-# Import your config
-from backend.config import Config
-
-# Initialize extensions
-db = SQLAlchemy()
-login_manager = LoginManager()
-mail = Mail()
+app = None
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(LocalDevelopmentConfig)
 
-    # Initialize extensions with app
     db.init_app(app)
-    login_manager.init_app(app)
-    mail.init_app(app)
-    CORS(app)
-
-    # Import models so they are registered with SQLAlchemy
-    from backend.models import model
-
-    # Register blueprints
-    from backend.routes.auth import auth_bp
-    from backend.routes.admin import admin_bp
-    from backend.routes.user import user_bp
-
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
-    app.register_blueprint(user_bp, url_prefix='/api/user')
-
-    # Create tables and admin user if not exists
-    with app.app_context():
-        db.create_all()
-        model.User.create_admin()
-
-    return app
+    jwt.init_app(app)
+    return app 
 
 app = create_app()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        admin = User.query.filter_by(email='admin@parking.com').first()
+        if not admin:
+            admin = User(
+                full_name='Admin User',
+                username='admin',
+                email='admin@parking.com',
+                phone='9999999999',
+                address='Admin Office',
+                pin_code='000000',
+                is_admin=True
+            )
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+            print("Admin user created!")
     app.run(debug=True)
+
+
